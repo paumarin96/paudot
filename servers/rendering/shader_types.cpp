@@ -218,6 +218,7 @@ ShaderTypes::ShaderTypes() {
 	shader_modes[RSE::SHADER_SPATIAL].functions["light"].built_ins["LIGHT"] = constt(ShaderLanguage::TYPE_VEC3);
 	shader_modes[RSE::SHADER_SPATIAL].functions["light"].built_ins["LIGHT_COLOR"] = constt(ShaderLanguage::TYPE_VEC3);
 	shader_modes[RSE::SHADER_SPATIAL].functions["light"].built_ins["LIGHT_IS_DIRECTIONAL"] = constt(ShaderLanguage::TYPE_BOOL);
+	shader_modes[RSE::SHADER_SPATIAL].functions["light"].built_ins["LIGHT_INDEX"] = constt(ShaderLanguage::TYPE_UINT);
 	shader_modes[RSE::SHADER_SPATIAL].functions["light"].built_ins["LIGHT_IS_AREA"] = constt(ShaderLanguage::TYPE_BOOL);
 	shader_modes[RSE::SHADER_SPATIAL].functions["light"].built_ins["LIGHT_AREA_DIFFUSE_MULTIPLIER"] = constt(ShaderLanguage::TYPE_VEC3);
 	shader_modes[RSE::SHADER_SPATIAL].functions["light"].built_ins["LIGHT_AREA_SPECULAR_MULTIPLIER"] = constt(ShaderLanguage::TYPE_VEC3);
@@ -233,6 +234,16 @@ ShaderTypes::ShaderTypes() {
 
 	shader_modes[RSE::SHADER_SPATIAL].functions["light"].can_discard = true;
 	shader_modes[RSE::SHADER_SPATIAL].functions["light"].main_function = true;
+
+	{
+		ShaderLanguage::StageFunctionInfo func;
+		func.skip_function = "vertex";
+		func.arguments.push_back(ShaderLanguage::StageFunctionInfo::Argument("light_index", ShaderLanguage::TYPE_UINT));
+		func.arguments.push_back(ShaderLanguage::StageFunctionInfo::Argument("position", ShaderLanguage::TYPE_VEC3));
+		func.return_type = ShaderLanguage::TYPE_FLOAT;
+		shader_modes[RSE::SHADER_SPATIAL].functions["fragment"].stage_functions["sample_directional_shadow"] = func;
+		shader_modes[RSE::SHADER_SPATIAL].functions["light"].stage_functions["sample_directional_shadow"] = func;
+	}
 
 	// spatial render modes
 	{

@@ -1354,6 +1354,8 @@ MaterialStorage::MaterialStorage() {
 		actions.renames["SPECULAR_AMOUNT"] = "specular_amount";
 		actions.renames["LIGHT_COLOR"] = "light_color";
 		actions.renames["LIGHT_IS_DIRECTIONAL"] = "is_directional";
+		actions.renames["LIGHT_INDEX"] = "light_index";
+		actions.renames["sample_directional_shadow"] = "sample_directional_shadow";
 		actions.renames["LIGHT_IS_AREA"] = "is_area";
 		actions.renames["LIGHT_AREA_DIFFUSE_MULTIPLIER"] = "area_diffuse";
 		actions.renames["LIGHT_AREA_SPECULAR_MULTIPLIER"] = "area_specular";

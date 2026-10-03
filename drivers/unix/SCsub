@@ -3,4 +3,8 @@ from misc.utility.scons_hints import *
 
 Import("env")
 
-env.add_source_files(env.drivers_sources, "*.cpp")
+if env["platform"] == "switch":
+    # Horizon uses newlib, but does not implement Unix processes or pipes.
+    env.add_source_files(env.drivers_sources, ["dir_access_unix.cpp", "file_access_unix.cpp", "thread_posix.cpp"])
+else:
+    env.add_source_files(env.drivers_sources, "*.cpp")

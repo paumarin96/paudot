@@ -396,3 +396,8 @@ $RECYCLE.BIN/
 *.msp
 *.lnk
 *.generated.props
+
+# Local Windows build tooling
+.build-venv/
+godot.vs.user.props
+godot-release.vs.user.props

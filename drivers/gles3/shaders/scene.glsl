@@ -1567,6 +1567,11 @@ layout(location = 0) out vec4 motion_vectors;
 
 /* clang-format off */
 
+// Custom directional shadow sampling is supported by the RD renderers only.
+float sample_directional_shadow(uint light_index, vec3 position) {
+	return 1.0;
+}
+
 #GLOBALS
 
 /* clang-format on */
@@ -1620,7 +1625,7 @@ float V_Kelemen(float LdotH) {
 	return 0.25 / (LdotH * LdotH + 1e-4);
 }
 
-void light_compute(vec3 N, vec3 L, vec3 V, float A, vec3 light_color, bool is_directional, float attenuation, vec3 f0, float roughness, float metallic, float specular_amount, vec3 albedo, inout float alpha, vec2 screen_uv,
+void light_compute(vec3 N, vec3 L, vec3 V, float A, vec3 light_color, bool is_directional, uint light_index, float attenuation, vec3 f0, float roughness, float metallic, float specular_amount, vec3 albedo, inout float alpha, vec2 screen_uv,
 #ifdef LIGHT_BACKLIGHT_USED
 		vec3 backlight,
 #endif
@@ -1816,7 +1821,7 @@ void light_process_omni(uint idx, vec3 vertex, vec3 eye_vec, vec3 normal, vec3 f
 
 	omni_attenuation *= shadow;
 
-	light_compute(normal, normalize(light_rel_vec), eye_vec, size_A, color, false, omni_attenuation, f0, roughness, metallic, omni_lights[idx].specular_amount, albedo, alpha, screen_uv,
+	light_compute(normal, normalize(light_rel_vec), eye_vec, size_A, color, false, idx, omni_attenuation, f0, roughness, metallic, omni_lights[idx].specular_amount, albedo, alpha, screen_uv,
 #ifdef LIGHT_BACKLIGHT_USED
 			backlight,
 #endif
@@ -1913,6 +1918,8 @@ void light_process_area(uint idx, vec3 vertex, vec3 eye_vec, vec3 normal, vec3 f
 	vec3 view = eye_vec;
 
 	bool is_area = true;
+	bool is_directional = false;
+	uint light_index = idx;
 	vec3 area_diffuse = vec3(ltc_diffuse);
 	vec3 area_specular = ltc_specular * fresnel_color;
 	float attenuation = light_attenuation_ltc;
@@ -2018,7 +2025,7 @@ void light_process_spot(uint idx, vec3 vertex, vec3 eye_vec, vec3 normal, vec3 f
 
 	spot_attenuation *= shadow;
 
-	light_compute(normal, normalize(light_rel_vec), eye_vec, size_A, color, false, spot_attenuation, f0, roughness, metallic, spot_lights[idx].specular_amount, albedo, alpha, screen_uv,
+	light_compute(normal, normalize(light_rel_vec), eye_vec, size_A, color, false, idx, spot_attenuation, f0, roughness, metallic, spot_lights[idx].specular_amount, albedo, alpha, screen_uv,
 #ifdef LIGHT_BACKLIGHT_USED
 			backlight,
 #endif
@@ -2725,7 +2732,7 @@ void main() {
 				float directionality = clamp(l1_len / l0_luminance, 0.0, 1.0);
 				float specular_intensity = directionality * lightmap_specular_intensity * 2.0;
 
-				light_compute(normal, L_view, view, 0.0, specular_light_color, true, 1.0, f0, roughness, metallic, specular_intensity, albedo, alpha, screen_uv,
+				light_compute(normal, L_view, view, 0.0, specular_light_color, true, 0xFFFFFFFFu, 1.0, f0, roughness, metallic, specular_intensity, albedo, alpha, screen_uv,
 #ifdef LIGHT_BACKLIGHT_USED
 						backlight,
 #endif
@@ -2818,7 +2825,7 @@ void main() {
 			continue;
 		}
 #endif
-		light_compute(normal, normalize(directional_lights[i].direction), normalize(view), directional_lights[i].size, directional_lights[i].color * directional_lights[i].energy, true, 1.0, f0, roughness, metallic, directional_lights[i].specular, albedo, alpha, screen_uv,
+		light_compute(normal, normalize(directional_lights[i].direction), normalize(view), directional_lights[i].size, directional_lights[i].color * directional_lights[i].energy, true, uint(i), 1.0, f0, roughness, metallic, directional_lights[i].specular, albedo, alpha, screen_uv,
 #ifdef LIGHT_BACKLIGHT_USED
 				backlight,
 #endif
@@ -3163,7 +3170,7 @@ void main() {
 
 #ifndef USE_VERTEX_LIGHTING
 	if (bool(directional_lights[directional_shadow_index].mask & layer_mask)) {
-		light_compute(normal, normalize(directional_lights[directional_shadow_index].direction), normalize(view), directional_lights[directional_shadow_index].size, directional_lights[directional_shadow_index].color * directional_lights[directional_shadow_index].energy, true, directional_shadow, f0, roughness, metallic, directional_lights[directional_shadow_index].specular, albedo, alpha, screen_uv,
+		light_compute(normal, normalize(directional_lights[directional_shadow_index].direction), normalize(view), directional_lights[directional_shadow_index].size, directional_lights[directional_shadow_index].color * directional_lights[directional_shadow_index].energy, true, uint(directional_shadow_index), directional_shadow, f0, roughness, metallic, directional_lights[directional_shadow_index].specular, albedo, alpha, screen_uv,
 #ifdef LIGHT_BACKLIGHT_USED
 				backlight,
 #endif

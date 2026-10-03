@@ -899,14 +899,18 @@ Error RenderingContextDriverVulkan::_create_vulkan_instance(const VkInstanceCrea
 	return OK;
 }
 
-Error RenderingContextDriverVulkan::initialize() {
-	Error err;
-
+Error RenderingContextDriverVulkan::_initialize_loader() {
 #ifdef USE_VOLK
 	if (volkInitialize() != VK_SUCCESS) {
 		return FAILED;
 	}
 #endif
+	return OK;
+}
+
+Error RenderingContextDriverVulkan::initialize() {
+	Error err = _initialize_loader();
+	ERR_FAIL_COND_V(err != OK, err);
 
 	err = _initialize_vulkan_version();
 	ERR_FAIL_COND_V(err != OK, err);

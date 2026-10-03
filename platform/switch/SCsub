@@ -1,0 +1,21 @@
+#!/usr/bin/env python
+from misc.utility.scons_hints import *
+
+Import("env")
+
+# The editor packages this ELF with elf2nro after adding project RomFS and NACP.
+compat_env = env.Clone()
+compat_env.Prepend(CPPPATH=[env["switch_nxvk_compat_headers"]])
+compat = compat_env.Object(env["switch_nxvk_compat"])
+program = env.add_program(
+    "#bin/godot",
+    [
+        "godot_switch.cpp",
+        "os_switch.cpp",
+        "display_server_switch.cpp",
+        "rendering_context_driver_vulkan_switch.cpp",
+        "audio_driver_switch.cpp",
+        compat,
+    ],
+)
+env.Depends(program, env["switch_nxvk_archives"])

@@ -125,6 +125,8 @@ protected:
 
 	// Can be overridden by platform-specific drivers.
 	virtual const char *_get_platform_surface_extension() const { return nullptr; }
+	// Static ICDs can supply their entrypoint without a system Vulkan loader.
+	virtual Error _initialize_loader();
 	virtual bool _use_validation_layers() const;
 	virtual Error _create_vulkan_instance(const VkInstanceCreateInfo *p_create_info, VkInstance *r_instance);
 

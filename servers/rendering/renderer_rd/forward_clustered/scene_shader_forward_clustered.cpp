@@ -804,6 +804,9 @@ void SceneShaderForwardClustered::init(const String p_defines) {
 		actions.renames["SPECULAR_AMOUNT"] = "specular_amount_highp";
 		actions.renames["LIGHT_COLOR"] = "light_color_highp";
 		actions.renames["LIGHT_IS_DIRECTIONAL"] = "is_directional";
+		actions.renames["LIGHT_INDEX"] = "light_index";
+		actions.renames["sample_directional_shadow"] = "sample_directional_shadow";
+		actions.usage_defines["sample_directional_shadow"] = "#define SAMPLE_DIRECTIONAL_SHADOW_USED\n";
 		actions.renames["LIGHT_IS_AREA"] = "is_area";
 		actions.renames["LIGHT_AREA_DIFFUSE_MULTIPLIER"] = "area_diffuse";
 		actions.renames["LIGHT_AREA_SPECULAR_MULTIPLIER"] = "area_specular";

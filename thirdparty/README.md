@@ -1186,6 +1186,9 @@ Files extracted from upstream source:
 - `volk.h`, `volk.c`
 - `LICENSE.md`
 
+Local changes:
+- `VOLK_NO_DYNAMIC_LOADER` excludes dynamic library loading for platforms that use a statically linked Vulkan ICD.
+
 
 ## vulkan
 

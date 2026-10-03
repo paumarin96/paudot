@@ -13,7 +13,7 @@
 	#else
 		typedef int (__stdcall* FARPROC)(void);
 	#endif
-#else
+#elif !defined(VOLK_NO_DYNAMIC_LOADER)
 #	include <dlfcn.h>
 #endif
 
@@ -83,6 +83,10 @@ static PFN_vkVoidFunction nullProcAddrStub(void* context, const char* name)
 
 VkResult volkInitialize(void)
 {
+#if defined(VOLK_NO_DYNAMIC_LOADER)
+	/* Static ICD users must call volkInitializeCustom instead. */
+	return VK_ERROR_INITIALIZATION_FAILED;
+#else
 #if defined(_WIN32)
 	HMODULE module = LoadLibraryA("vulkan-1.dll");
 	if (!module)
@@ -125,6 +129,7 @@ VkResult volkInitialize(void)
 	volkGenLoadLoader(NULL, vkGetInstanceProcAddrStub);
 
 	return VK_SUCCESS;
+#endif
 }
 
 void volkInitializeCustom(PFN_vkGetInstanceProcAddr handler)
@@ -141,7 +146,7 @@ void volkFinalize(void)
 	{
 #if defined(_WIN32)
 		FreeLibrary((HMODULE)loadedModule);
-#else
+#elif !defined(VOLK_NO_DYNAMIC_LOADER)
 		dlclose(loadedModule);
 #endif
 	}

@@ -37,7 +37,9 @@
 #include "core/templates/list.h"
 
 #include <fcntl.h>
+#ifndef SWITCH_ENABLED
 #include <sys/ioctl.h>
+#endif
 #include <sys/stat.h>
 #ifdef __linux__
 #include <sys/statfs.h>
