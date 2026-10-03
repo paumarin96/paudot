@@ -35,6 +35,7 @@ def get_flags():
     return {
         "arch": "arm64",
         "target": "template_debug",
+        "disable_path_overrides": False,
         "vulkan": True,
         "use_volk": True,
         "rendering_device": True,
@@ -44,6 +45,10 @@ def get_flags():
         "builtin_pcre2_with_jit": False,
         "module_raycast_enabled": False,
         "module_mono_enabled": False,
+        "module_upnp_enabled": False,
+        "module_enet_enabled": False,
+        "module_webrtc_enabled": False,
+        "module_websocket_enabled": False,
         "accesskit": False,
         "sdl": False,
     }
@@ -64,6 +69,8 @@ def configure(env):
         fail("This port supports the Vulkan Mobile renderer only.")
     if not env["threads"]:
         fail("Switch requires threads=yes for rendering and audio.")
+    if env["disable_path_overrides"]:
+        fail("Switch requires disable_path_overrides=no to load romfs:/game.pck through --main-pack.")
     sdk = Path(env["devkitpro"]).expanduser().resolve()
     if not env["devkitpro"] or not (sdk / "devkitA64").is_dir():
         fail("devkitA64 is missing. Install switch-dev and pass devkitpro=<native path>; MSYS /opt paths do not work in Windows Python.")
@@ -99,7 +106,7 @@ def configure(env):
     env["SHLIBSUFFIX"] = ".so"
     env.Append(CPPPATH=["#platform/switch", str(sdk / "libnx/include"), str(portlibs / "include")])
     env.Append(LIBPATH=[str(nxvk / "lib"), str(portlibs / "lib"), str(sdk / "libnx/lib")])
-    env.Append(CPPDEFINES=["SWITCH_ENABLED", "UNIX_ENABLED", "UNIX_SOCKET_UNAVAILABLE", "PTHREAD_NO_RENAME", "__SWITCH__", "VK_USE_PLATFORM_VI_NN", "VOLK_NO_DYNAMIC_LOADER"])
+    env.Append(CPPDEFINES=["SWITCH_ENABLED", "UNIX_ENABLED", "UNIX_SOCKET_UNAVAILABLE", "PTHREAD_NO_RENAME", "__SWITCH__", "VULKAN_ENABLED", "VK_USE_PLATFORM_VI_NN", "VOLK_NO_DYNAMIC_LOADER"])
     arch_flags = ["-march=armv8-a+crc+crypto", "-mtune=cortex-a57", "-mtp=soft", "-fPIE", "-pthread"]
     env.Append(CCFLAGS=arch_flags + ["-ffunction-sections", "-fdata-sections"])
     env.Append(LINKFLAGS=arch_flags + ["-specs=" + str(sdk / "libnx/switch.specs"), "-Wl,--gc-sections", "-Wl,-u,vk_icdGetInstanceProcAddr"])

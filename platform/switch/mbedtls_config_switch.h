@@ -1,5 +1,5 @@
 /**************************************************************************/
-/*  platform_config.h                                                     */
+/*  mbedtls_config_switch.h                                                     */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
@@ -30,6 +30,8 @@
 
 #pragma once
 
-// Horizon provides monotonic ticks but does not advertise POSIX clock support.
-#define MBEDTLS_PLATFORM_MS_TIME_ALT
-#define GODOT_MBEDTLS_INCLUDE_H "mbedtls_config_switch.h"
+#ifndef GODOT_MBEDTLS_LIGHT
+#include <mbedtls/mbedtls_config.h>
+// Godot uses its own transport callbacks; Horizon has no Unix socket backend.
+#undef MBEDTLS_NET_C
+#endif

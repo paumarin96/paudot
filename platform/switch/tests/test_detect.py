@@ -50,6 +50,7 @@ class SwitchConfigurationTests(unittest.TestCase):
              "-Wl,--start-group", "-lnvk_support", "-lz", "-lexpat", "-lnx", "-lpthread", "-lm", "-Wl,--end-group"],
         )
         self.assertEqual(self.env["PROGSUFFIX"], ".elf")
+        self.assertIn("VULKAN_ENABLED", self.env["CPPDEFINES"])
         self.assertIn("VOLK_NO_DYNAMIC_LOADER", self.env["CPPDEFINES"])
         self.assertIn("-pthread", self.env["CCFLAGS"])
         self.assertEqual(self.env["ENV"]["DEVKITPRO"], self.sdk.as_posix())
@@ -68,7 +69,7 @@ class SwitchConfigurationTests(unittest.TestCase):
 
     def test_invalid_target_configuration_is_rejected(self):
         for key, value in [("target", "editor"), ("arch", "x86_64"), ("vulkan", False),
-                           ("forward_plus_renderer", True), ("threads", False)]:
+                           ("forward_plus_renderer", True), ("threads", False), ("disable_path_overrides", True)]:
             with self.subTest(key=key):
                 old_value = self.env[key]
                 self.env[key] = value

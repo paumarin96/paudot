@@ -35,6 +35,7 @@
 
 #include "core/config/project_settings.h"
 #include "core/io/ip.h"
+#include "core/io/logger.h"
 #include "core/os/main_loop.h"
 #include "drivers/unix/dir_access_unix.h"
 #include "drivers/unix/file_access_unix.h"
@@ -42,9 +43,63 @@
 #include "main/main.h"
 
 #include <unistd.h>
+#include <sys/stat.h>
 
 #include <cstdlib>
+#include <cstdio>
 #include <ctime>
+#include <mutex>
+
+extern "C" int64_t mbedtls_ms_time(void) {
+	return armTicksToNs(armGetSystemTick()) / 1000000;
+}
+
+class SwitchDebugLogger : public Logger {
+	FILE *file = nullptr;
+	std::mutex mutex;
+
+public:
+	SwitchDebugLogger() {
+		// ProjectSettings does not exist yet, so use a shared bootstrap log.
+		mkdir("sdmc:/switch", 0777);
+		mkdir("sdmc:/switch/godot", 0777);
+		mkdir("sdmc:/switch/godot/userdata", 0777);
+		const char *path = "sdmc:/switch/godot/userdata/switch-startup.log";
+		const char *previous = "sdmc:/switch/godot/userdata/switch-startup.previous.log";
+		remove(previous);
+		rename(path, previous);
+		file = fopen(path, "w");
+		if (file) {
+			// Godot enables its print globals during Main::setup.
+			fputs("Switch startup: SD logging initialized before engine setup.\n", file);
+			fflush(file);
+		}
+	}
+
+	~SwitchDebugLogger() override {
+		if (file) {
+			fclose(file);
+		}
+	}
+
+	void logv(const char *p_format, va_list p_list, bool p_err) override {
+		if (!should_log(p_err)) {
+			return;
+		}
+		char buffer[4096];
+		int length = vsnprintf(buffer, sizeof(buffer), p_format, p_list);
+		if (length > 0) {
+			std::lock_guard<std::mutex> lock(mutex);
+			int written = MIN(length, int(sizeof(buffer) - 1));
+			svcOutputDebugString(buffer, written);
+			if (file) {
+				fwrite(buffer, 1, written, file);
+				// Keep the last message available even if the process aborts.
+				fflush(file);
+			}
+		}
+	}
+};
 
 // Networking is intentionally unavailable until a Horizon socket backend is provided.
 class IP_Switch : public IP {
@@ -57,6 +112,7 @@ public:
 };
 
 OS_Switch::OS_Switch() {
+	add_logger(memnew(SwitchDebugLogger));
 	ticks_start = armGetSystemTick();
 	init_thread_posix();
 	FileAccess::make_default<FileAccessUnix>(FileAccess::ACCESS_RESOURCES);
@@ -72,7 +128,7 @@ OS_Switch::OS_Switch() {
 }
 
 void OS_Switch::initialize() {
-	AudioDriverManager::initialize(0);
+	// Main::setup2 initializes audio after creating and loading ProjectSettings.
 }
 
 void OS_Switch::finalize() {
@@ -181,12 +237,21 @@ uint64_t OS_Switch::get_ticks_usec() const {
 
 void OS_Switch::run() {
 	ERR_FAIL_NULL(main_loop);
+	print_line("Switch startup: initializing the main loop and scene.");
 	main_loop->initialize();
+	print_line("Switch startup: main loop initialized.");
+	bool first_frame = true;
 	while (appletMainLoop()) {
 		DisplayServer::get_singleton()->process_events();
 		if (Main::iteration()) {
+			print_line("Switch runtime: game requested exit.");
 			break;
+		}
+		if (first_frame) {
+			print_line("Switch startup: first main-loop iteration completed.");
+			first_frame = false;
 		}
 	}
 	main_loop->finalize();
+	print_line("Switch runtime: main loop finalized.");
 }

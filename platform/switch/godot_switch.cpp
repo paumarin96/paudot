@@ -32,8 +32,11 @@
 #include "os_switch.h"
 
 #include "main/main.h"
+#include "core/io/logger.h"
+#include "core/string/print_string.h"
 
 #include <cstdio>
+#include <cstdlib>
 
 extern "C" {
 // Let libnx use the loader's applet type, so restricted launches can be rejected.
@@ -73,14 +76,25 @@ int main(int argc, char **argv) {
 		char renderer[] = "mobile";
 		char driver_flag[] = "--rendering-driver";
 		char driver[] = "vulkan";
-		char *args[] = { pack_flag, pack_path, renderer_flag, renderer, driver_flag, driver };
-		Error err = Main::setup(argc > 0 ? argv[0] : "godot.nro", 6, args);
+		char log_flag[] = "--log-file";
+		char log_path[] = "user://logs/godot.log";
+		char *args[] = { pack_flag, pack_path, renderer_flag, renderer, driver_flag, driver, log_flag, log_path };
+		print_line("Switch startup: beginning engine setup.");
+		Error err = Main::setup(argc > 0 ? argv[0] : "godot.nro", 8, args);
+		Logger::set_flush_stdout_on_print(true);
+		print_line(vformat("Switch startup: engine setup returned %d.", int(err)));
 		if (err == OK) {
-			if (Main::start()) {
+			print_line("Switch startup: loading the main scene.");
+			int start_result = Main::start();
+			print_line(vformat("Switch startup: main scene startup returned %d.", start_result));
+			if (start_result == EXIT_SUCCESS) {
 				os.run();
+			} else {
+				os.set_exit_code(EXIT_FAILURE);
 			}
 			exit_code = os.get_exit_code();
 			Main::cleanup();
+			print_line("Switch runtime: engine cleanup completed.");
 		}
 	}
 	romfsExit();

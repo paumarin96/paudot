@@ -523,6 +523,8 @@ Files extracted from upstream source:
 Patches:
 
 - `0001-backport-upstream-commit-63f2f57.patch` (GH-121974)
+- Recognize libnx's `__SWITCH__` target and use its ARM trap instruction in `Core.h`;
+  Jolt uses its portable C++ mutex/condition-variable semaphore on this platform.
 
 
 ## libbacktrace
@@ -679,6 +681,7 @@ File extracted from upstream source:
 Patches:
 
 - `0001-missing-include.patch` ([GH-120018](https://github.com/godotengine/godot/pull/120018))
+- Rename the reserved `_S` local in `src/svd.h` to avoid newlib's ctype macro.
 
 
 ## mbedtls
